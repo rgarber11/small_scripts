@@ -5,11 +5,15 @@ import logging
 import sys
 import subprocess
 
-VERSION = '1.0.0'
+# NOTE: THIS CODE IS HEAVILY BASED OFF bayasdev's envycontrol.
+# Thank you so much for giving me the inspiration for this
+
+VERSION = "1.0.0"
 UDEV_PATH = "/lib/udev/rules.d/99-remove-manix.rules"
-UDEV_REMOVE_DRIVE = '''ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1987", ATTR{device}=="0x5016", ATTR{remove}="1"
-'''
+UDEV_REMOVE_DRIVE = """ACTION=="add", SUBSYSTEM=="pci", ATTR{vendor}=="0x1987", ATTR{device}=="0x5016", ATTR{remove}="1"
+"""
 REBOOT_REMINDER = "Please reboot for changes to take effect."
+
 
 def assert_root():
     if os.geteuid() != 0:
@@ -29,7 +33,7 @@ def delete_file(path):
 def create_file(path, contents):
     if not os.path.exists(os.path.dirname(path)):
         os.makedirs(os.path.dirname(path))
-    with open(path, mode='w', encoding='utf-8') as udev_file:
+    with open(path, mode="w", encoding="utf-8") as udev_file:
         udev_file.write(contents)
     logging.info("Created path")
     if logging.getLogger().level == logging.DEBUG:
@@ -38,19 +42,44 @@ def create_file(path, contents):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-v', '--version', action='version', version=VERSION, help='Output the current version')
-    parser.add_argument('-q', '--query', action='store_true', help='Queries if drive is currently blacklisted')
-    parser.add_argument('-e', '--enable', action='store_true', help='Enables problematic nvme drive.')
-    parser.add_argument('-d', '--disable', action='store_true', help='Disables problematic nvme drive for working power.')
-    parser.add_argument('-f', '--force', action='store_true', help='Attempts disconnect without reboot (only valid with disable)')
-    parser.add_argument('--verbose', default=False, action='store_true', help='Enable verbose logging')
+    parser.add_argument(
+        "-v",
+        "--version",
+        action="version",
+        version=VERSION,
+        help="Output the current version",
+    )
+    parser.add_argument(
+        "-q",
+        "--query",
+        action="store_true",
+        help="Queries if drive is currently blacklisted",
+    )
+    parser.add_argument(
+        "-e", "--enable", action="store_true", help="Enables problematic nvme drive."
+    )
+    parser.add_argument(
+        "-d",
+        "--disable",
+        action="store_true",
+        help="Disables problematic nvme drive for working power.",
+    )
+    parser.add_argument(
+        "-f",
+        "--force",
+        action="store_true",
+        help="Attempts disconnect without reboot (only valid with disable)",
+    )
+    parser.add_argument(
+        "--verbose", default=False, action="store_true", help="Enable verbose logging"
+    )
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
 
     args = parser.parse_args()
 
-    logging.basicConfig(format='%(levelname)s: %(message)s')
+    logging.basicConfig(format="%(levelname)s: %(message)s")
     if args.enable and args.disable:
         logging.error("Cannot both enable and disable drive")
         parser.print_help()
@@ -71,19 +100,25 @@ def main():
         create_file(UDEV_PATH, UDEV_REMOVE_DRIVE)
         if args.force:
             logging.info("Reloading udev rules...")
-            p = subprocess.run(['udevadm', 'control', '--reload-rules'])
+            p = subprocess.run(["udevadm", "control", "--reload-rules"])
             if p.returncode != 0:
-                logging.error("Failed to reload udev rules. A reboot is probably necessary")
+                logging.error(
+                    "Failed to reload udev rules. A reboot is probably necessary"
+                )
                 sys.exit(2)
             logging.info("Triggering udev rules...")
-            q = subprocess.run(['udevadm', 'trigger'])
+            q = subprocess.run(["udevadm", "trigger"])
             if q.returncode != 0:
-                logging.error("Failed to trigger udev rules. A reboot is probably necessary")
+                logging.error(
+                    "Failed to trigger udev rules. A reboot is probably necessary"
+                )
                 sys.exit(2)
-            print("udev rules successfully triggered. A reboot is probably not necessary")
+            print(
+                "udev rules successfully triggered. A reboot is probably not necessary"
+            )
         else:
             print(REBOOT_REMINDER)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
