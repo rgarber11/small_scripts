@@ -1,0 +1,11 @@
+[Unit]
+Description=Generate Hyprland Nvidia Config
+Before=getty.target
+After=local-fs.target sysinit.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/hyprnvidia.sh
+
+[Install]
+WantedBy=getty.target
