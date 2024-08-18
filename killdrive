@@ -1,9 +1,9 @@
-#!/usr/bin/python
-import os
+#!/usr/bin/env python
 import argparse
 import logging
-import sys
+import os
 import subprocess
+import sys
 
 # NOTE: THIS CODE IS HEAVILY BASED OFF bayasdev's envycontrol.
 # Thank you so much for giving me the inspiration for this
